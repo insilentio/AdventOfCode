@@ -7,7 +7,7 @@ library(tidyverse)
 # day 01 --------------------------------------------------------------------------------------
 
 # real dataset
-depths <- as.tibble(read_lines("Varia/Data/aoc21_01_1.txt"))
+depths <- as.tibble(read_lines("Data/aoc21_01_1.txt"))
 
 # part 1
 depths %>%
@@ -28,7 +28,7 @@ depths %>%
 
 # day 02 --------------------------------------------------------------------------------------
 # real dataset
-move <- as.tibble(read_lines("Varia/Data/aoc21_02.txt"))
+move <- as.tibble(read_lines("Data/aoc21_02.txt"))
 
 # part 1
 temp <- move %>%
@@ -57,7 +57,7 @@ temp <- move %>%
 # day 03 --------------------------------------------------------------------------------------
 library(janitor)
 # real dataset
-diag <- as.tibble(read_lines("Varia/Data/aoc21_03.txt"))
+diag <- as.tibble(read_lines("Data/aoc21_03.txt"))
           
 # part 1
 #
@@ -112,7 +112,7 @@ o2 * co2
 # day 04 --------------------------------------------------------------------------------------
 rand <- c(50,68,2,1,69,32,87,10,31,21,78,23,62,98,16,99,65,35,27,96,66,26,74,72,45,52,81,60,38,57,54,19,18,77,71,29,51,41,22,6,58,5,42,92,85,64,94,12,83,11,17,14,37,36,59,33,0,93,34,70,97,7,76,20,3,88,43,47,8,79,80,63,9,25,56,75,15,4,82,67,39,30,89,86,46,90,48,73,91,55,95,28,49,61,44,84,40,53,13,24)
 
-boards <- read_lines("Varia/Data/aoc21_04.txt")
+boards <- read_lines("Data/aoc21_04.txt")
 boards <- boards[boards != ""]
 
 build_matrix <- function(text, nr = 5) {
@@ -155,7 +155,7 @@ mybingo %>%
 
 # day 05 --------------------------------------------------------------------------------------
 
-value <- read_lines("Varia/Data/aoc21_05.txt")
+value <- read_lines("Data/aoc21_05.txt")
 
 size <- 1000
 mymatrix <- matrix(rep(0, size^2), nrow = size)
@@ -261,7 +261,7 @@ sum(mymatrix >=2)
 # day 06 --------------------------------------------------------------------------------------
 
 value <- c("3,4,3,1,2")
-value <- readLines("Varia/Data/aoc21_06.txt")
+value <- readLines("Data/aoc21_06.txt")
 
 fishes <- as.numeric(unlist(str_split(value, ",")))
 
@@ -277,7 +277,7 @@ count <- lanternfish(fishes, 256)
 # day 07 --------------------------------------------------------------------------------------
 
 value <- c("16,1,2,0,4,2,7,1,2,14")
-value <- readLines("Varia/Data/aoc21_07.txt")
+value <- readLines("Data/aoc21_07.txt")
 
 pos <- as.numeric(unlist(str_split(value, ",")))
 
@@ -313,7 +313,7 @@ t1 <- 0
 
 # day 08 --------------------------------------------------------------------------------------
 
-value <- readLines("Varia/Data/aoc21_08.txt")
+value <- readLines("Data/aoc21_08.txt")
 
 digits <- tibble(input = gsub(" \\|.+", "", value), output = gsub(".+\\| ", "", value))
 outputs <- digits %>%
@@ -458,7 +458,7 @@ value <- tibble( ints = c(
   8767896789,
   9899965678)
 )
-value <- tibble(ints= readLines("Varia/Data/aoc21_09.txt"))
+value <- tibble(ints= readLines("Data/aoc21_09.txt"))
 
 map <- as.matrix(value %>%
   separate(ints, into = paste0("i",  1:nchar(value[1,])), sep = "(?<=[0-9])(?=[0-9])") %>%
@@ -482,12 +482,40 @@ risk <- lowmap * map + lowmap * 1
 sum(risk)
 
 # part 2
-basin <- (map != 9)
-basin[basin == FALSE] <- NA
-basin <- 1 * basin
+basin <- map
+basin[basin == 9] <-"T"
+basin[lowmap] <- "L"
+k <- 1
+for (i in 1:length(basin)) {
+  if (basin[i] == "L") {
+    basin[i] <- paste0("L", as.character(k))
+    k <- k + 1
+  }
+}
 
-#no ideaa
-#
+while (sum(grepl("^[1-8]", basin)) > 0) {
+  for (i in 1:(sizex)) {
+    for (j in 1:sizey) {
+      if (basin[j, i] %in% as.character(1:8)) {
+        if (i < sizex) if (grepl("L", basin[j,i+1])) basin[j, i] <- basin[j,i+1]
+        if (i > 1) if (grepl("L", basin[j,i-1])) basin[j, i] <- basin[j,i-1]
+        if (j < sizey) if (grepl("L", basin[j+1,i])) basin[j, i] <- basin[j+1,i]
+        if (j > 1) if (grepl("L", basin[j-1,i])) basin[j, i] <- basin[j-1,i]
+      }
+    }
+  }
+}
+basin_sizes <- tibble(k = NA, n = NA, .rows = 0)
+for (i in 1:(k-1)) {
+  basin_sizes <- basin_sizes %>%
+    add_row(k = i, n = length(grep(paste0("L", k, "\\b"), basin)))
+}
+
+basin_sizes %>%
+  arrange(desc(n)) %>%
+  head(3) %>%
+  summarize(prod = prod(n))
+
 
 # day 10 --------------------------------------------------------------------------------------
 
@@ -501,7 +529,7 @@ value <- c("[({(<(())[]>[[{[]{<()<>>",
            "[<(<(<(<{}))><([]([]()",
            "<{([([[(<>()){}]>(<<{{",
            "<{([{{}}[<[[[<>{}]]]>[]]")
-value <- readLines("Varia/Data/aoc21_10.txt")
+value <- readLines("Data/aoc21_10.txt")
 
 remove_resp <- function(text) {
   temp <- gsub("(\\(\\))|(\\[\\])|(\\{\\})|(<>)", "", text)
@@ -547,5 +575,36 @@ for (i in 1:length(value)) {
 sum(scores)
 
 # part 2
-
+valid <- value[scores == 0]
+get_reduced <- function(text) {
+  while (nchar(text) > 1) {
+    before <- nchar(text)
+    text <- remove_resp(text)
+    after <- nchar(text)
+    if (before == after) {
+      break
+    }
+  }
+  return(text)
+}
+get_score2 <- function(text) {
+  score <- 0
+  text <- get_reduced(text)
   
+  while (nchar(text) > 0) {
+    len <- nchar(text)
+    symb <- substr(text, len, len)
+    if (symb == "(") score <- (score * 5 + 1) else
+      if (symb == "[") score <- score * 5 + 2 else
+        if (symb == "{") score <- score * 5 + 3 else
+          if (symb == "<") score <- score * 5 + 4
+    text <- substr(text, 1, len-1)
+  }
+  return(score)
+}
+
+scores <- c()
+for (i in 1:length(valid)) {
+  scores[i] <- get_score2(valid[i])
+}
+median(scores)
