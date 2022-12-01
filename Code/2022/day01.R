@@ -29,3 +29,14 @@ calories %>%
   summarise(value = sum(value)) %>%
   arrange(desc(value)) %>%
   head(1)
+
+
+# part 2 ------------------------------------------------------------------
+
+
+calories %>%
+  group_by(ID) %>%
+  summarise(value = sum(value)) %>%
+  arrange(desc(value)) %>%
+  slice(1:3) %>%
+  summarise(value = sum(value))
